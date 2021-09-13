@@ -25,7 +25,12 @@ jobs:
       - name: Checkout OSAL
         if: steps.cache-src-proto-bld.outputs.cache-hit != 'true'
         uses: actions/checkout@v2
-
+      - name: Copy Makefile
+        run: ls
+      - name: Copy Makefile
+        run: |
+          cd osal
+          ls
       - name: Copy Makefile
         run: cp osal/Makefile.sample Makefile
 
