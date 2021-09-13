@@ -1,0 +1,124 @@
+name: Standalone OSAL Build and Test
+
+on:
+  push:
+  pull_request:
+
+env:
+  PERMISSIVE_MODE: true
+
+jobs:
+
+  prep-env:
+    name: Prepare Environment
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Cache Source and proto-build
+        id: cache-src-proto-bld
+        uses: actions/cache@v2
+        with:
+          path: |
+            /home/runner/work/osal/Makefile
+            /home/runner/work/osal/build/*
+            /home/runner/work/osal/osal/*
+          key: proto-build-${{ github.run_number }}
+
+      - name: Checkout OSAL
+        if: steps.cache-src-proto-bld.outputs.cache-hit != 'true'
+        uses: actions/checkout@v2
+
+      - name: Copy Makefile
+        run: cp osal/Makefile.sample Makefile
+        working-directory: /home/runner/work/osal
+
+      - name: Prep Build
+        run: |
+          make PERMISSIVE_MODE=true prep O=/home/runner/work/osal/build
+        working-directory: /home/runner/work/osal
+
+  build-osal:
+    runs-on: ubuntu-18.04
+    needs: prep-env
+
+    steps:
+      - name: Cache Source and proto-build
+        id: cache-src-proto-bld
+        uses: actions/cache@v2
+        with:
+          path: |
+            /home/runner/work/osal/Makefile
+            /home/runner/work/osal/build/*
+            /home/runner/work/osal/osal/*
+          key: proto-build-${{ github.run_number }}
+
+      - name: Build the code
+        run: make -j O=/home/runner/work/osal/build
+        working-directory: /home/runner/work/osal/
+
+
+  build-tests:
+    runs-on: ubuntu-18.04
+    needs: [prep-env, build-osal]
+    env:
+      ENABLE_UNIT_TESTS: true
+
+    steps:
+
+      - name: Install lcov
+        run: sudo apt-get install lcov -y
+
+      - name: Cache Source and proto-build
+        id: cache-src-proto-bld
+        uses: actions/cache@v2
+        with:
+          path: |
+            /home/runner/work/osal/Makefile
+            /home/runner/work/osal/build/*
+            /home/runner/work/osal/osal/*
+          key: proto-build-${{ github.run_number }}
+
+      - name: Prep Tests
+        run: |
+          make prep
+        working-directory: /home/runner/work/osal
+
+      - name: Check files post bin-build
+        run: ls
+        working-directory: /home/runner/work/osal/build
+
+      - name: Build Tests Binary
+        run: make -j
+        working-directory: /home/runner/work/osal
+
+      - name: Run Tests
+        run: make test
+        working-directory: /home/runner/work/osal
+
+  #
+  # Run-Unit-Tests:
+  #   runs-on: ubuntu-18.04
+  #   timeout-minutes: 15
+  #   needs: "Prepare-Environment"
+  #
+  #   steps:
+  #     - name: Install coverage tools
+  #       run: sudo apt-get install lcov -y
+  #
+  #     - name: Prepare the test environment
+  #       run: make PERMISSIVE_MODE=true ENABLE_UNIT_TESTS=true prep
+  #
+  #     # Baseline lcov and run all tests
+  #     - name: Test
+  #       run: make test
+  #
+  #     - name: Calculate coverage
+  #       run: make lcov | tee lcov_out.txt
+  #
+  #     - name: Confirm 100% line coverage
+  #       run: |
+  #         if [[ `grep -A 3 "Overall coverage rate" lcov_out.txt | grep lines` != *"100.0%"* ]]; then
+  #           grep -A 3 "Overall coverage rate" lcov_out.txt
+  #           echo "Lacks 100.0% line unit test coverage"
+  #           exit -1
+  #         fi
