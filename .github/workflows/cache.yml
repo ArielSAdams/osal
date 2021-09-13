@@ -6,6 +6,7 @@ on:
 
 env:
   PERMISSIVE_MODE: true
+  REPO_NAME: ${{ github.event.repository.name }}
 
 jobs:
 
@@ -18,10 +19,7 @@ jobs:
         id: cache-src-proto-bld
         uses: actions/cache@v2
         with:
-          path: |
-            /home/runner/work/osal/Makefile
-            /home/runner/work/osal/build/*
-            /home/runner/work/osal/osal/*
+          path: /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}/*
           key: proto-build-${{ github.run_number }}
 
       - name: Checkout OSAL
@@ -30,12 +28,10 @@ jobs:
 
       - name: Copy Makefile
         run: cp osal/Makefile.sample Makefile
-        working-directory: /home/runner/work/osal
 
       - name: Prep Build
         run: |
-          make PERMISSIVE_MODE=true prep O=/home/runner/work/osal/build
-        working-directory: /home/runner/work/osal
+          make PERMISSIVE_MODE=true prep 
 
   build-osal:
     runs-on: ubuntu-18.04
@@ -46,15 +42,11 @@ jobs:
         id: cache-src-proto-bld
         uses: actions/cache@v2
         with:
-          path: |
-            /home/runner/work/osal/Makefile
-            /home/runner/work/osal/build/*
-            /home/runner/work/osal/osal/*
+          path: /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}/*
           key: proto-build-${{ github.run_number }}
 
       - name: Build the code
-        run: make -j O=/home/runner/work/osal/build
-        working-directory: /home/runner/work/osal/
+        run: make -j
 
 
   build-tests:
@@ -72,28 +64,21 @@ jobs:
         id: cache-src-proto-bld
         uses: actions/cache@v2
         with:
-          path: |
-            /home/runner/work/osal/Makefile
-            /home/runner/work/osal/build/*
-            /home/runner/work/osal/osal/*
+          path: /home/runner/work/${{ env.REPO_NAME }}/${{ env.REPO_NAME }}/*
           key: proto-build-${{ github.run_number }}
 
       - name: Prep Tests
         run: |
           make prep
-        working-directory: /home/runner/work/osal
 
       - name: Check files post bin-build
         run: ls
-        working-directory: /home/runner/work/osal/build
 
       - name: Build Tests Binary
         run: make -j
-        working-directory: /home/runner/work/osal
 
       - name: Run Tests
         run: make test
-        working-directory: /home/runner/work/osal
 
   #
   # Run-Unit-Tests:
