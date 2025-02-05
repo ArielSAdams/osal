@@ -110,7 +110,7 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: mcdc results
+          name: MCDC results
           path: |
             **/*.gcov
             mcdc_results.txt
