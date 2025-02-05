@@ -14,6 +14,7 @@ env:
   ENABLE_UNIT_TESTS: true
   OMIT_DEPRECATED: true
   BUILDTYPE: debug
+  TESTS_RAN: false
   
 jobs:
   # Checks for duplicate actions. Skips push actions if there is a matching or
@@ -78,16 +79,17 @@ jobs:
         working-directory: build
         run: |
           echo "BASE_DIR=build/unit-test-coverage" >> $GITHUB_ENV
-          ctest --output-on-failure -j4 2>&1 | tee ../test_results.txt
+          (ctest --output-on-failure -j4 2>&1  || true) | tee ../test_results.txt
+          echo "TESTS_RAN=true" >> $GITHUB_ENV
 
       - name: Grab test modules
-        if: success() || failure()
+        if: ${{ env.TESTS_RAN == 'true' }}
         run: |
           echo "MODULES=$(grep -oP 'Test #\d+: \K[\w\-\_]+' test_results.txt | tr '\n' ' ' | sed 's/ $//')" >> $GITHUB_ENV
           grep -oP 'Test #\d+: \K[\w\-\_]+' test_results.txt | tr '\n' ' ' | sed 's/ $//' >> modules.txt
           
       - name: Run mcdc analysis
-        if: success() || failure()
+        if: ${{ env.TESTS_RAN == 'true' }}
         run: bash .github/scripts/mcdc-analyze.sh
       
       - name: Save PR number
