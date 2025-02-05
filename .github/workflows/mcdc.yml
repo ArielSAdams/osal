@@ -136,7 +136,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: mcdc.yml
-          workflow_conclusion: neutral
+          workflow_conclusion: ""
           branch: main
           name: MCDC results
           path: ./main-branch-results
