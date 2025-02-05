@@ -119,7 +119,7 @@ jobs:
             
   comment-mcdc:
     needs: mcdc
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || always()
     name: Comment MCDC Comparision on PR
     runs-on: ubuntu-20.04
 
